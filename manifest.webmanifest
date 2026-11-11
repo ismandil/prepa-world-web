@@ -1,0 +1,9 @@
+{
+  "name": "Prepa World",
+  "short_name": "Prepa World",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#101420",
+  "theme_color": "#101420"
+}
