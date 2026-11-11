@@ -22,6 +22,10 @@
     #rotate { display: none; position: fixed; inset: 0; z-index: 20; background: #101420; color: #fff;
               font-family: system-ui, sans-serif; align-items: center; justify-content: center; text-align: center; font-size: 20px; }
     @media (orientation: portrait) and (max-width: 900px) { body.playing #rotate { display: flex; } }
+    #fs { display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 30;
+          font: 700 15px system-ui, sans-serif; color: #fff; background: rgba(255,111,160,0.9); border: 0;
+          border-radius: 20px; padding: 9px 18px; box-shadow: 0 3px 10px rgba(0,0,0,0.35); }
+    body.playing:not(.full) #fs { display: block; }
   </style>
 </head>
 <body>
@@ -33,6 +37,7 @@
     <div id="bar"><div id="fill"></div></div>
   </div>
   <div id="rotate">Turn your phone sideways ↻</div>
+  <button id="fs">⛶ FULL SCREEN</button>
   <script>
     // Plein écran et paysage : le navigateur ne l'autorise qu'après un geste de l'utilisateur.
     function goFullscreen() {
@@ -83,6 +88,17 @@
         goFullscreen();
       }
     }, { passive: true });
+
+    // Bouton plein écran : visible tant qu'on n'est pas en plein écran.
+    document.getElementById("fs").addEventListener("click", goFullscreen);
+    function onFullscreenChange() {
+      var full = !!(document.fullscreenElement || document.webkitFullscreenElement)
+                 || window.matchMedia("(display-mode: fullscreen)").matches;
+      document.body.classList.toggle("full", full);
+    }
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    onFullscreenChange();
 
     // Le geste « retour » ne quitte plus le jeu : il reste sur la page.
     history.pushState({ prepa: 1 }, "");
