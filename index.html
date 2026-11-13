@@ -39,6 +39,31 @@
   <div id="rotate">Turn your phone sideways ↻</div>
   <button id="fs">⛶ FULL SCREEN</button>
   <script>
+    // Suivi (Grafana Cloud Faro) : visites, appareil, erreurs, temps de chargement et événements du jeu.
+    // Désactivé tant que FARO_URL est vide. Aucun prénom ni code de partie n'est envoyé.
+    var FARO_URL = "https://faro-collector-prod-eu-central-0.grafana.net/collect/0fe2ef1aa9bb42749391a699d81f6618";
+    var faro = null;
+    window.prepaLog = function (name, detail) {
+      try {
+        if (faro) { faro.api.pushEvent(name, detail ? { detail: String(detail) } : {}); }
+      } catch (e) {}
+    };
+    if (FARO_URL) {
+      var faroScript = document.createElement("script");
+      faroScript.src = "https://unpkg.com/@grafana/faro-web-sdk@1.19.0/dist/bundle/faro-web-sdk.iife.js";
+      faroScript.onload = function () {
+        try {
+          faro = GrafanaFaroWebSdk.initializeFaro({
+            url: FARO_URL,
+            app: { name: "prepa-world", version: "0.1.0", environment: "production" },
+            instrumentations: GrafanaFaroWebSdk.getWebInstrumentations({ captureConsole: false })
+          });
+          window.prepaLog("page_open", screen.width + "x" + screen.height);
+        } catch (e) {}
+      };
+      document.head.appendChild(faroScript);
+    }
+
     // Plein écran et paysage : le navigateur ne l'autorise qu'après un geste de l'utilisateur.
     function goFullscreen() {
       var el = document.documentElement;
@@ -75,7 +100,9 @@
         }).then(function () {
           document.getElementById("start").style.display = "none";
           document.body.classList.add("playing");
+          window.prepaLog("game_loaded", Math.round(performance.now() / 1000) + " s");
         }).catch(function (message) {
+          window.prepaLog("load_failed", message);
           alert(message);
         });
       };
