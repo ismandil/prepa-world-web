@@ -48,6 +48,13 @@
         if (faro) { faro.api.pushEvent(name, detail ? { detail: String(detail) } : {}); }
       } catch (e) {}
     };
+    // Personnage joué (Ismail / Khawla) : rattaché à toute la session dans Grafana.
+    var pendingUser = null;
+    window.prepaSetUser = function (name) {
+      try {
+        if (faro) { faro.api.setUser({ username: name }); } else { pendingUser = name; }
+      } catch (e) {}
+    };
     if (FARO_URL) {
       var faroScript = document.createElement("script");
       faroScript.src = "https://unpkg.com/@grafana/faro-web-sdk@1.19.0/dist/bundle/faro-web-sdk.iife.js";
@@ -58,7 +65,16 @@
             app: { name: "prepa-world", version: "0.1.0", environment: "production" },
             instrumentations: GrafanaFaroWebSdk.getWebInstrumentations({ captureConsole: false })
           });
+          if (pendingUser) { faro.api.setUser({ username: pendingUser }); }
           window.prepaLog("page_open", screen.width + "x" + screen.height);
+          // Marque / modèle du téléphone (Chrome Android le donne sur demande ; iPhone ne le donne pas).
+          if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+            navigator.userAgentData.getHighEntropyValues(["model", "platform", "platformVersion"]).then(function (d) {
+              faro.api.pushEvent("device", { model: d.model || "?", os: (d.platform || "") + " " + (d.platformVersion || "") });
+            }).catch(function () {});
+          } else {
+            faro.api.pushEvent("device", { model: /iPhone|iPad/.test(navigator.userAgent) ? "iPhone/iPad" : "?", os: navigator.platform || "" });
+          }
         } catch (e) {}
       };
       document.head.appendChild(faroScript);
